@@ -6,3 +6,6 @@ build/
 
 .tox/
 .coverage
+.venv
+.venv
+.vscode
