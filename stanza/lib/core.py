@@ -74,6 +74,8 @@ class Converter:
         self.project = ProjectPackage(setup["name"], setup["version"])
 
     def add_dependencies(self, req_file: Path, is_dev=False):
+        if not isinstance(req_file, Path):
+            req_file = Path(req_file).resolve()
         for req in get_requirements(req_file):
             extras = ""
             if req.extras:
@@ -87,6 +89,9 @@ class Converter:
     def set_project_by_defaults(self, name=None, version="0.1.0"):
         default_name = self.base_dir.name
         name = name or default_name
+        version = version or "0.1.0"
+        assert name
+        assert version
         self.project = ProjectPackage(name, version)
 
     @property
@@ -146,13 +151,19 @@ def convert_command(
     name: Optional[AnyStr] = None,
     version="0.1.0",
 ):
+    base_dir = base_dir or Path(".").resolve()
     converter = Converter(base_dir)
     default_name = name or base_dir.name
+    setup_path = base_dir / "setup.py"
 
     for depfile in dependencies:
+        if not isinstance(depfile, Path):
+            depfile = Path(depfile)
         log.info("Adding dependencies from %s", depfile.resolve())
         converter.add_dependencies(depfile)
     for depfile in dev_dependencies:
+        if not isinstance(depfile, Path):
+            depfile = Path(depfile)
         log.info("Adding [dev] dependencies from %s", depfile.resolve())
         converter.add_dependencies(depfile)
     try:
@@ -167,4 +178,4 @@ def convert_command(
         converter.set_project_by_defaults(name=name, version=version)
 
     log.info("Generating pyproject.toml file in %s", base_dir)
-    converter.dump_to_pyproject_toml()
+    converter.write_toml(base_dir)
