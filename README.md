@@ -3,6 +3,14 @@
 Convert a pip-based project to to pypoetry.toml
 
 This used to be what dephell used to do so well, but the project is since archived.
+
+Features of stanza:
+
+- Parses a list of requirements.txt file (similar to `poetry add`)
+- Detects `setup.py` file and includes project info
+- Separate **dev** dependencies from **non-dev** dependencies.
+- Importing multiple requirements.
+- Include sub-requirements (e.g. `-r ./requirements/base.txt`).
 # Installation
 
 If you don't use `pipsi`, you're missing out.
@@ -25,9 +33,13 @@ Usage: stanza [OPTIONS] [PATH]
   Convert requirements.txt to pypoetry.toml
 
 Options:
-  -R, --dev-requirements PATH
-  -r, --requirements PATH
-  -n, --name TEXT
-  -v, --version TEXT
+  -R, --dev-requirements PATH  file paths to requirements.txt that include
+                               development requirements; many can be specified
+  -r, --requirements PATH      file paths to requirements.txt that include
+                               normal requirements; many can be specified
+  -n, --name TEXT              name of the project (will normally be detected
+                               automatically)
+  -v, --version TEXT           version of the project (will normally be
+                               detected automatically)
   --help                       Show this message and exit.
 ```

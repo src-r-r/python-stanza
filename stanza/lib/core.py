@@ -152,6 +152,8 @@ def convert_command(
     version="0.1.0",
 ):
     base_dir = base_dir or Path(".").resolve()
+    if not isinstance(base_dir, Path):
+        base_dir = Path(base_dir)
     converter = Converter(base_dir)
     default_name = name or base_dir.name
     setup_path = base_dir / "setup.py"
