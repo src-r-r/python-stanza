@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "sor_juana"
+name = "sample_pyproject_toml"
 version = "0.1.0"
 description = "Example Project"
 authors = ["Author Name <Author Email>"]

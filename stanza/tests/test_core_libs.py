@@ -61,4 +61,5 @@ def test_dump_to_pyproject_toml():
     converter.add_dependencies(REQ_LOCAL, True)
     converter.parse_setup_py(SETUP_PATH)
 
-    converter.dump_to_pyproject_toml()
+    content = converter.get_toml_content()
+    assert 'name = "stanza"' in content
