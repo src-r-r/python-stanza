@@ -82,11 +82,18 @@ class Converter:
 
     @property
     def layout_author(self):
+        """ Convenience property to format the project author in proper format.
+
+        Will be None of _setup_data is None
+        """
         if not self._setup_data:
             return None
         return f"{self._setup_data['author']} <{self._setup_data['author_email']}>"
     
     def dump_to_pyproject_toml(self, base_dir=None):
+
+        base_dir = base_dir or self.base_dir
+
         if not self.project:
             raise RuntimeError("No project specified.")
         
@@ -103,8 +110,12 @@ class Converter:
                 "license": self._setup_data["license"],
             })
         layout = Layout(project, **layout_kwargs)
+
+        content = layout.generate_poetry_content()
+
+        import ipdb; ipdb.set_trace()
         
-        layout.create(base_dir or self.base_dir)
+        layout.create(base_dir)
 
 def convert_command(dependencies : Iterable[Path], dev_dependencies : Iterable[Path], base_dir=Path(".").resolve(), name : Optional[AnyStr]=None, version="0.1.0"):
     converter = Converter(base_dir)

@@ -53,3 +53,12 @@ def test_add_dependencies():
     assert is_in_deplist("pytz", converter.dependencies)
     assert is_in_deplist("pytest-sugar", converter.dev_dependencies)
     assert is_in_req_list("psycopg2", converter.dependencies)
+
+def test_dump_to_pyproject_toml():
+    converter = Converter(ASSETS)
+    converter.add_dependencies(REQ_BASE)
+    converter.add_dependencies(REQ_PROD)
+    converter.add_dependencies(REQ_LOCAL, True)
+    converter.parse_setup_py(SETUP_PATH)
+
+    converter.dump_to_pyproject_toml()
