@@ -3,7 +3,7 @@ Convert requirements.txt to pypoetry.toml
 """
 from setuptools import find_packages, setup
 
-dependencies = ['click', 'requirements-parser', 'poetry', 'pytest']
+dependencies = ['click', 'requirements-parser', 'poetry']
 
 setup(
     name='stanza',

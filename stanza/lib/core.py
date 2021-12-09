@@ -1,4 +1,5 @@
 import re
+import os
 from typing import Iterable, Optional, AnyStr
 from pathlib import Path
 from configparser import ConfigParser
@@ -8,6 +9,10 @@ from poetry.core.toml import TOMLFile
 from poetry.poetry import ProjectPackage, Poetry
 from poetry.console.commands.init import InitCommand
 from poetry.layouts import Layout
+import importlib.machinery
+import importlib.util
+from copy import deepcopy
+from stanza.lib.parser import get_requirements
 
 import logging
 log = logging.getLogger(__name__)
@@ -25,16 +30,46 @@ class Converter:
         self.dev_dependencies = []
         self._setup_data = {}
     
+    def _copy_and_get_setup_data(self, setup_path : Path):
+        """ While this could be done with eval, that's a bit dangerous.
+
+        Instead, let's import the `setup.py`, replacing the `setup` function
+        call with a dict assignment. This way we can import the setup keyword
+        arguments as a dictionary and pass directly to poetry.
+
+        Return the setup arguments.
+        """
+        sp = setup_path
+        swap_path = sp.parent / f"swp-{sp.name}"
+        swap_code = RE_REPL_SETUP(self.SETUP_REPLACEMENT, setup_path.read_text())
+        swap_path.write_text(swap_code)
+        # Thanks to https://csatlas.com/python-import-file-module/
+        loader = importlib.machinery.SourceFileLoader("swap_setup", str(swap_path))
+        spec = importlib.util.spec_from_loader( 'swap_setup', loader)
+        swap_setup_module = importlib.util.module_from_spec( spec )
+        loader.exec_module( swap_setup_module )
+        swap_setup = deepcopy(swap_setup_module._setup_kwargs)
+        del swap_setup_module
+        del spec
+        del loader
+        # Delete the original file.
+        os.remove(str(swap_path))
+        return swap_setup
+
+    
     def parse_setup_py(self, setup_path : Path):
-        setup_code = setup_path.read_text()
-        setup_code = RE_REPL_SETUP(setup_code, self.SETUP_REPLACEMENT)
-        exec(setup_code)
-        self._setup_data = _setup_kwargs
+        self._setup_data = self._copy_and_get_setup_data(setup_path)
+        setup = self._setup_data
         self.project = ProjectPackage(setup["name"], setup["version"])
 
     def add_dependencies(self, req_file : Path, is_dev=False):
-        for req in requirements.parse(str(req_file)):
-            dep = Dependency(req.name, req.extras, optional=optional)
+        for req in get_requirements(req_file):
+            extras = ''
+            if req.extras:
+                extras = extras
+            if extras:
+                import ipdb; ipdb.set_trace()
+            dep = Dependency(req.name, constraint=extras)
             if is_dev:
                 self.dev_dependencies.append(dep)
             else:
@@ -51,7 +86,7 @@ class Converter:
             return None
         return f"{self._setup_data['author']} <{self._setup_data['author_email']}>"
     
-    def dump_to_pyproject_toml(self):
+    def dump_to_pyproject_toml(self, base_dir=None):
         if not self.project:
             raise RuntimeError("No project specified.")
         
@@ -69,7 +104,7 @@ class Converter:
             })
         layout = Layout(project, **layout_kwargs)
         
-        layout.create(self.base_dir)
+        layout.create(base_dir or self.base_dir)
 
 def convert_command(dependencies : Iterable[Path], dev_dependencies : Iterable[Path], base_dir=Path(".").resolve(), name : Optional[AnyStr]=None, version="0.1.0"):
     converter = Converter(base_dir)
