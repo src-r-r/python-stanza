@@ -37,5 +37,5 @@ from stanza.lib.core import convert_command
     default=Path(".").resolve(),
 )
 def main(dev_requirements, requirements, name, version, path):
-    """Convert requirements.txt to pypoetry.toml"""
+    """Convert requirements.txt to pyproject.toml"""
     convert_command(requirements, dev_requirements, path, name, version)
