@@ -4,21 +4,78 @@ from typing import Iterable, Optional, AnyStr
 from pathlib import Path
 from configparser import ConfigParser
 import requirements
+from poetry.repositories.pypi_repository import PyPiRepository
 from poetry.core.packages import Requirement, Dependency
 from poetry.core.toml import TOMLFile
 from poetry.poetry import ProjectPackage, Poetry
 from poetry.console.commands.init import InitCommand
 from poetry.layouts import Layout
+from poetry.core.semver.version_range import VersionRange
 import importlib.machinery
 import importlib.util
 from copy import deepcopy
 from stanza.lib.parser import get_requirements
 
 import logging
+import logging.config
 
 log = logging.getLogger(__name__)
 
 RE_REPL_SETUP = re.compile(r"^setup\(", re.MULTILINE).sub
+
+LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s %(message)s"
+
+
+def logdict(stanza_level=logging.WARNING):
+    return {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "default": {
+                "format": LOG_FORMAT,
+            }
+        },
+        "handlers": {
+            "stdout": {
+                "class": "logging.StreamHandler",
+                "formatter": "default",
+                "stream": "ext://sys.stdout",
+            },
+        },
+        "loggers": {
+            "": {
+                "handlers": ["stdout"],
+                "level": stanza_level,
+                "propagate": True,
+            }
+        },
+    }
+
+
+def fetch_latest_version_for(dep: Dependency, repo=PyPiRepository(), force_search=True):
+    log.debug("Finding version for %s", dep.name)
+    latest = None
+    for pkg in repo.find_packages(dep):
+        dep.constraint
+        if pkg.name != dep.name:
+            continue
+        if not latest:
+            latest = pkg
+            continue
+        if pkg.version > latest.version:
+            latest = pkg
+    log.debug("Setting %s's version to %s", dep.name, str(latest.version))
+    dep.version = str(latest.version)
+    return dep
+
+
+def fetch_latest_version(
+    dependencies: Iterable[Dependency], repo=PyPiRepository(), force_search=False
+):
+    for dep in dependencies:
+        pkg = fetch_latest_version_for(dep, repo, force_search)
+        if pkg:
+            yield pkg
 
 
 class Converter:
@@ -81,6 +138,7 @@ class Converter:
             if req.extras:
                 extras = extras
             dep = Dependency(req.name, constraint=extras)
+            dep = fetch_latest_version_for(dep)
             if is_dev:
                 self.dev_dependencies.append(dep)
             else:
@@ -103,16 +161,22 @@ class Converter:
         if not self._setup_data:
             return None
         return f"{self._setup_data['author']} <{self._setup_data['author_email']}>"
+    
+    def _layout_dependency(self, dep : Dependency, is_dev=False):
+        c = dep.constraint
+        if c and isinstance(c, VersionRange) and c.is_any():
+            return (dep.name, str(dep.version))
+        return (dep.name, str(dep.constraint))
 
     @property
     def _layout_kwargs(self):
 
         layout_kwargs = {
             "dependencies": dict(
-                [(d.name, str(d.constraint)) for d in self.dependencies]
+                [self._layout_dependency(d) for d in self.dependencies]
             ),
             "dev_dependencies": dict(
-                [(d.name, str(d.constraint)) for d in self.dev_dependencies]
+                [self._layout_dependency(d, True) for d in self.dev_dependencies]
             ),
         }
         if self._setup_data:
@@ -136,7 +200,7 @@ class Converter:
         layout = Layout(self.project.name, **self._layout_kwargs)
 
         return layout.generate_poetry_content()
-    
+
     def write_toml(self, base_dir=None):
 
         base_dir = base_dir or self.base_dir
@@ -150,7 +214,12 @@ def convert_command(
     base_dir=Path(".").resolve(),
     name: Optional[AnyStr] = None,
     version="0.1.0",
+    verbose=False,
 ):
+    if verbose:
+        logging.config.dictConfig(logdict(logging.DEBUG))
+    else:
+        logging.config.dictConfig(logdict(logging.WARNING))
     base_dir = base_dir or Path(".").resolve()
     if not isinstance(base_dir, Path):
         base_dir = Path(base_dir)

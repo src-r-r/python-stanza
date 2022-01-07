@@ -25,10 +25,16 @@ from stanza.lib.core import convert_command
     help="name of the project (will normally be detected automatically)",
 )
 @click.option(
-    "-v",
+    "-V",
     "--version",
     default="0.1.0",
     help="version of the project (will normally be detected automatically)",
+)
+@click.option(
+    "-v",
+    "--verbose",
+    help="Make the program talk a lot.",
+    is_flag=True,
 )
 @click.argument(
     "path",
@@ -36,6 +42,6 @@ from stanza.lib.core import convert_command
     # help="override the base directory. Default is the current path.",
     default=Path(".").resolve(),
 )
-def main(dev_requirements, requirements, name, version, path):
+def main(dev_requirements, requirements, name, version, verbose, path):
     """Convert requirements.txt to pypoetry.toml"""
-    convert_command(requirements, dev_requirements, path, name, version)
+    convert_command(requirements, dev_requirements, path, name, version, verbose=verbose)
