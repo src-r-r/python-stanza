@@ -1,6 +1,6 @@
 # Stanza
 
-Convert a pip-based project to to pypoetry.toml
+Convert a pip-based project to to pyproject.toml
 
 This used to be what dephell used to do so well, but the project is since archived.
 
@@ -30,7 +30,7 @@ To use it:
 ```
 Usage: stanza [OPTIONS] [PATH]
 
-  Convert requirements.txt to pypoetry.toml
+  Convert requirements.txt to pyproject.toml
 
 Options:
   -R, --dev-requirements PATH  file paths to requirements.txt that include

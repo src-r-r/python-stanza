@@ -42,6 +42,6 @@ from stanza.lib.core import convert_command
     # help="override the base directory. Default is the current path.",
     default=Path(".").resolve(),
 )
-def main(dev_requirements, requirements, name, version, verbose, path):
-    """Convert requirements.txt to pypoetry.toml"""
-    convert_command(requirements, dev_requirements, path, name, version, verbose=verbose)
+def main(dev_requirements, requirements, name, version, path):
+    """Convert requirements.txt to pyproject.toml"""
+    convert_command(requirements, dev_requirements, path, name, version)
