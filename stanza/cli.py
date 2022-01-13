@@ -25,10 +25,16 @@ from stanza.lib.core import convert_command
     help="name of the project (will normally be detected automatically)",
 )
 @click.option(
-    "-v",
+    "-V",
     "--version",
     default="0.1.0",
     help="version of the project (will normally be detected automatically)",
+)
+@click.option(
+    "-v",
+    "--verbose",
+    help="Make the program talk a lot.",
+    is_flag=True,
 )
 @click.argument(
     "path",

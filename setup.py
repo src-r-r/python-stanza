@@ -7,12 +7,12 @@ dependencies = ['click', 'requirements-parser', 'poetry', 'pytest']
 
 setup(
     name='stanza',
-    version='0.1.0',
+    version='0.1.1',
     url='https://github.com/src-r-r/python-stanza',
     license='BSD',
     author='Jordan Hewitt',
     author_email='jordan@damngood.tech',
-    description='Convert setup.py file to pyproject.toml',
+    description='Convert a setup.py file to a pyproject.toml poetry file.',
     long_description=__doc__,
     packages=find_packages(exclude=['tests']),
     include_package_data=True,
