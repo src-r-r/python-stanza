@@ -2,6 +2,8 @@ import click
 from pathlib import Path
 from stanza.lib.core import convert_command
 
+import logging
+log = logging.getLogger(__name__)
 
 @click.command()
 @click.option(
@@ -42,6 +44,9 @@ from stanza.lib.core import convert_command
     # help="override the base directory. Default is the current path.",
     default=Path(".").resolve(),
 )
-def main(dev_requirements, requirements, name, version, path):
+def main(dev_requirements, requirements, name, version, verbose, path):
     """Convert requirements.txt to pyproject.toml"""
+    log.setLevel(logging.INFO)
+    if verbose:
+        log.setLevel(logging.DEBUG)
     convert_command(requirements, dev_requirements, path, name, version)

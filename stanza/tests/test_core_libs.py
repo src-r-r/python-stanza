@@ -3,6 +3,7 @@ from pathlib import Path
 from poetry.core.packages import Dependency
 from poetry.core.packages.project_package import ProjectPackage
 from pkg_resources import Requirement
+import re
 import pytest
 from stanza.lib.core import (
     Converter,
@@ -25,6 +26,13 @@ REQ_BASE = REQ / "base.txt"
 REQ_LOCAL = REQ / "local.txt"
 REQ_PROD = REQ / "production.txt"
 SWAP_SETUP = SETUP_PATH.parent / ("swp-" + str(SETUP_PATH.name))
+
+def pkg_version(package) -> re.Pattern:
+    return re.compile(r'%s = "[_\d\-\.\w]+"' % package)
+
+def assertAnyVersionIn(package : AnyStr, string : AnyStr):
+    if not pkg_version(package).findall(string):
+        raise AttributeError("Could not find package %s of any version in '%s'", package, string)
 
 
 def is_in_deplist(name: AnyStr, deplist: Iterable[Dependency]):
@@ -89,7 +97,7 @@ def test_fetch_latest_version():
     dep = Dependency("pytest", "*")
     log.debug("Created dependency %s", dep)
     new_deps = [d for d in fetch_latest_version([dep])]
-    assert new_deps[0].version == "6.2.5"
+    assert new_deps[0].version == "7.1.1"
     assert new_deps[0].name == "pytest"
 
 
@@ -111,4 +119,4 @@ def test_write_layout_to_file():
     converter.dependencies = [dep]
     converter.project = ProjectPackage("testproject", "1.0.0")
     toml_content = converter.get_toml_content()
-    assert 'pytest = "6.2.5"' in toml_content
+    assertAnyVersionIn('pytest', toml_content)
