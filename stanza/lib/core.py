@@ -159,7 +159,9 @@ class Converter:
         Will be None of _setup_data is None
         """
         if not self._setup_data:
-            return None
+            return ""
+        if not "author" in self._setup_data:
+            return ""
         return f"{self._setup_data['author']} <{self._setup_data['author_email']}>"
     
     def _layout_dependency(self, dep : Dependency, is_dev=False):
@@ -182,10 +184,10 @@ class Converter:
         if self._setup_data:
             layout_kwargs.update(
                 {
-                    "version": self._setup_data["version"],
-                    "description": self._setup_data["description"],
-                    "author": self.layout_author,
-                    "license": self._setup_data["license"],
+                    "version": self._setup_data.get("version") or "",
+                    "description": self._setup_data.get("description") or "",
+                    "author": self.layout_author or "",
+                    "license": self._setup_data.get("license") or '',
                 }
             )
         return layout_kwargs
